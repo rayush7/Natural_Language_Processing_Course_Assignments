@@ -35,7 +35,6 @@ if __name__ == "__main__":
     slabels = classifier.predict(devfile)
     glabels = load_label_output(devfile)
     eval_list(glabels, slabels)
-    
     if testfile is not None:
         # Evaluation on the test data
         print("\n3. Evaluation on the test dataset...\n")

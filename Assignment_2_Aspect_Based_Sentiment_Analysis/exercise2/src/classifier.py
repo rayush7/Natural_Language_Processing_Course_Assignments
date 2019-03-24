@@ -1,113 +1,58 @@
 import numpy as np
 import pandas as pd
-import spacy
-from keras.models import load_model
-from keras.models import Sequential
-from keras.layers import Dense, Activation
-from keras.preprocessing.text import Tokenizer
-from sklearn.preprocessing import LabelEncoder
 from keras.utils import to_categorical
-import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+
+from word2vec import PreTrainedWord2Vec
+
 
 class Classifier:
-    """The Classifier"""
+    """The Classifier (Word2Vec embedding + Logistic Regression"""
 
-
-    #############################################
-    def __init__(self):
-    	self.spacy_parser = None
-    	self.tokenizer = None
-    	self.label_encoder_sentiment = None
-    	self.sentiment_model = None
-    	self.vocab_size = None
-    	self.num_sentiments = 3
-    	self.num_aspect_categories = 12
-
+    def __init__(self, path_to_weights='../ressources/crawl-300d-200k.vec'):
+        """
+        Initialize the classifier.
+        @:param path_to_weights : path to the file containing the weights for the pretrained word2vec model.
+        """
+        # Data
+        self.col_names = ['Polarity', 'Aspect_Category', 'Specific_Target_Aspect_Term', 'Character_Offset', 'Sentence']
+        self.polarity_encoder = LabelEncoder()
+        self.categories_encoder = LabelEncoder()
+        # Model
+        self.w2v = PreTrainedWord2Vec(path_to_weights, 150000)
+        self.clf = LogisticRegression(C=1, solver='liblinear', multi_class='ovr')
 
     def train(self, trainfile):
         """Trains the classifier model on the training set stored in file trainfile"""
+        # Load data
+        train_df = pd.read_csv(trainfile, sep='\t', names=self.col_names)
 
-        col_names = ['Polarity','Aspect_Category','Specific_Target_Aspect_Term','Character_Offset','Sentence']
-        train_df = pd.read_csv(trainfile,sep='\t',names=col_names)
-        
+        # Load training matrix as word2vec
+        X_tr = self.w2v.encode_parse(train_df.Sentence, False)
 
-        self.spacy_parser = spacy.load('en')
-        self.vocab_size = 8000
-        self.num_aspect_categories = 12 # There are 12 Aspect Categories
-        self.num_sentiments = 3 # Positive, Negative and Neutral
+        # Add categories information
+        train_categories_integer = self.categories_encoder.fit_transform(train_df.Aspect_Category)
+        train_categories_dummy = to_categorical(train_categories_integer)
+        X_tr = np.hstack((X_tr, train_categories_dummy))
 
-        #Drop the character Offset Dataframe
-        train_df = train_df.drop(columns=['Character_Offset'])
-        
-        #Extract Sentiment for Aspect
-        Specific_Target_Sentiment_Term = []
-
-        for review in self.spacy_parser.pipe(train_df['Sentence']):
-            if review.is_parsed:
-                Specific_Target_Sentiment_Term.append(' '.join([token.lemma_ for token in review if (not token.is_stop and not token.is_punct and (token.pos_ == "ADJ" or token.pos_ == "VERB"))]))
-            else:
-                Specific_Target_Sentiment_Term.append('')  
-
-        train_df['Specific_Target_Sentiment_Term'] = Specific_Target_Sentiment_Term
-
-        #Building Bag of Words Representation
-        self.tokenizer = Tokenizer(num_words=self.vocab_size)
-        self.tokenizer.fit_on_texts(train_df.Sentence)
-
-        #Building the sentiment analysis model
-        self.sentiment_model = Sequential()
-        self.sentiment_model.add(Dense(512, input_shape=(self.vocab_size,), activation='relu'))
-        self.sentiment_model.add(Dense(self.num_sentiments, activation='softmax'))
-        self.sentiment_model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-        tokenized_sentiment = pd.DataFrame(self.tokenizer.texts_to_matrix(train_df.Specific_Target_Sentiment_Term))
-
-        # Encoding the Sentiment or Polarity Labels
-        self.label_encoder_sentiment = LabelEncoder()
-        sentiment_integer_category = self.label_encoder_sentiment.fit_transform(train_df.Polarity)
-        sentiment_dummy_category = to_categorical(sentiment_integer_category)
-
-        # Training the Sentiment Model
-        history = self.sentiment_model.fit(tokenized_sentiment, sentiment_dummy_category, epochs=5, verbose=1,validation_split=0.3)
-        plt.plot(history.history['acc'])
-        plt.plot(history.history['val_acc'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'val'], loc='upper left')
-        plt.savefig('Training_Phase_Accuracy_Curve.png')
-
-        return self
+        # Get training labels
+        y_tr = self.polarity_encoder.fit_transform(train_df.Polarity)
+        self.clf.fit(X_tr, y_tr)
 
     def predict(self, datafile):
         """Predicts class labels for the input instances in file 'datafile'
         Returns the list of predicted labels
         """
-        col_names = ['Polarity','Aspect_Category','Specific_Target_Aspect_Term','Character_Offset','Sentence']
-        dev_df = pd.read_csv(datafile,sep='\t',names=col_names)
-        dev_aspect_category = list(dev_df.Aspect_Category)
+        # Load data
+        test_df = pd.read_csv(datafile, sep='\t', names=self.col_names)
 
-        #Drop the character Offset Dataframe
-        dev_df = dev_df.drop(columns=['Character_Offset'])
-                             
-        # Sentiment preprocessing
-        Dev_Specific_Target_Sentiment_Term = []
+        # Load training matrix as word2vec
+        X_te = self.w2v.encode_parse(test_df.Sentence, False)
 
-        for review in self.spacy_parser.pipe(dev_df['Sentence']):
-            if review.is_parsed:
-               Dev_Specific_Target_Sentiment_Term.append(' '.join([token.lemma_ for token in review if (not token.is_stop and not token.is_punct and (token.pos_ == "ADJ" or token.pos_ == "VERB"))]))
-            else:
-               Dev_Specific_Target_Sentiment_Term.append('') 
-            
-        Dev_Specific_Target_Sentiment_Term = pd.DataFrame(self.tokenizer.texts_to_matrix(Dev_Specific_Target_Sentiment_Term))
+        # Add categories information
+        test_categories_integer = self.categories_encoder.transform(test_df.Aspect_Category)
+        test_categories_dummy = to_categorical(test_categories_integer)
+        X_te = np.hstack((X_te, test_categories_dummy))
 
-        # Models output
-        Dev_predict_sentiment = self.label_encoder_sentiment.inverse_transform(self.sentiment_model.predict_classes(Dev_Specific_Target_Sentiment_Term))
-
-        #for i in range(len(dev_aspect_category)):
-        	#print("Sentence " + str(i+1) + " is expressing a  " + Dev_predict_sentiment[i] + " opinion about " + dev_df.Aspect_Category[i])
-
-        #Predicted Polarity or Sentiment
-        slabels = list(Dev_predict_sentiment)
-
-        return slabels
+        return list(self.polarity_encoder.inverse_transform(self.clf.predict(X_te)))
