@@ -8,7 +8,6 @@ Natural Language Processing Course - Assignment 2 - Aspect Based Sentiment Analy
 
     a) Create a Resources Folder (in the same directory as the src and data folder)
 
-
     b) Download the 300 dimensional pretrained Fasttext Word Embeddings (trained on Common Crawl Dataset) and put it in the resources folder :  https://centralesupelec-my.sharepoint.com/personal/benoit_laures_student_ecp_fr/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fbenoit%5Flaures%5Fstudent%5Fecp%5Ffr%2FDocuments%2Fcrawl%2D300d%2D200k%2Evec&parent=%2Fpersonal%2Fbenoit%5Flaures%5Fstudent%5Fecp%5Ffr%2FDocuments&CID=11a87e76-b7ba-46c0-9372-06ca60e3787e
 
     python3 tester.py
