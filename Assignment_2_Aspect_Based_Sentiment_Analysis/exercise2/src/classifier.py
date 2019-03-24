@@ -10,7 +10,7 @@ from word2vec import PreTrainedWord2Vec
 class Classifier:
     """The Classifier (Word2Vec embedding + Logistic Regression"""
 
-    def __init__(self, path_to_weights='../ressources/crawl-300d-200k.vec'):
+    def __init__(self, path_to_weights='../resources/crawl-300d-200k.vec'):
         """
         Initialize the classifier.
         @:param path_to_weights : path to the file containing the weights for the pretrained word2vec model.
