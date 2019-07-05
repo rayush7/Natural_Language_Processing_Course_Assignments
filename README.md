@@ -5,17 +5,17 @@ This repositroy contains code for Assignments of [Natural Language Processing Co
 
 __KeyWords__: Word2Vec
 
-Solutions
+[Solutions](Assignment_1_Word2Vec_Negative_Sampling)  [Report](Assignment_1_Word2Vec_Negative_Sampling/Natural_Language_Processing_Assignment1.pdf)
  
  ### Assignment 2- Aspect Based Sentiment Analysis
  
  __KeyWords__: Parsing, POS Tagging
  
- Solutions
+ [Solutions](Assignment_2_Aspect_Based_Sentiment_Analysis)
  
   ### Assignment 3 - Dialog Systems in NLP
  
  __KeyWords__: Retrieval and Generative Dialog Model
  
- Solutions
+ [Solutions](Assignment_3_Dialog_Systems)  [Report](Assignment_3_Dialog_Systems/NLP3_Dialog_System_Project_Report.pdf)
 
