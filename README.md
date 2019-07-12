@@ -1,5 +1,5 @@
 # Natural_Language_Processing_Course_Assignments
-This repositroy contains code for Assignments of [Natural Language Processing Course](http://nlpcourse.europe.naverlabs.com/) Offered at Ecole CentraleSupelec in Spring 2019 by Mathias Galle (Naver Labs Europe)
+This repositroy contains code for Assignments of [Natural Language Processing Course](http://nlpcourse.europe.naverlabs.com/) Offered at Ecole CentraleSupelec in Spring 2019 by Mathias Galle (Naver Labs Europe). The assigments were done in collaboration with [Paul Asquin](https://github.com/paulasquin) and [Benoit Laures](https://github.com/BenoitLaures).
 
 ### Assignment 1- Word Vectors
 
